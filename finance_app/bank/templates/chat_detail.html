@@ -1,0 +1,52 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="container-fluid my-5">
+  <div class="row">
+    <!-- Sidebar with Conversations and a "Start New Chat" link -->
+    <div class="col-md-3">
+      <h4>Conversations</h4>
+      <div class="mb-3">
+        <a href="{% url 'create_chat' %}" class="btn btn-sm btn-outline-primary w-100">Start New Chat</a>
+      </div>
+      <ul class="list-group">
+        {% for partner in partners %}
+          <li class="list-group-item {% if other_user and partner.username == other_user.username %}active{% endif %}">
+            <a href="{% url 'chat' partner.username %}" style="color: inherit; text-decoration: none;">{{ partner.username }}</a>
+          </li>
+        {% empty %}
+          <li class="list-group-item">No conversations yet.</li>
+        {% endfor %}
+      </ul>
+    </div>
+    <div class="col-md-9">
+      {% if other_user %}
+        <h2>Chat with {{ other_user.username }}</h2>
+      {% else %}
+        <h2>Start a New Conversation</h2>
+      {% endif %}
+      <div id="chat-messages" style="height:400px; overflow-y:auto; border:1px solid #ddd; padding:10px; margin-bottom:20px; background:#f9f9f9;">
+        {% if chat_messages %}
+          {% for msg in chat_messages %}
+            <div class="mb-2">
+              <strong>{{ msg.sender.username }}:</strong>
+              <p>{{ msg.decrypted_text }}</p>
+              <small>{{ msg.get_formatted_timestamp }}</small>
+            </div>
+          {% endfor %}
+        {% else %}
+          <p>No messages in this conversation.</p>
+        {% endif %}
+      </div>
+      {% if other_user %}
+      <form method="post" action="{% url 'chat' other_user.username %}">
+        {% csrf_token %}
+        <div class="mb-3">
+          <textarea name="message" placeholder="Type your message..." class="form-control" rows="3" required></textarea>
+        </div>
+        <button type="submit" class="btn btn-primary">Send</button>
+      </form>
+      {% endif %}
+    </div>
+  </div>
+</div>
+{% endblock %}

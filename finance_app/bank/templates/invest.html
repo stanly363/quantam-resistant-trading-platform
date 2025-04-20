@@ -1,0 +1,22 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="container my-5">
+  <h1>Invest in {{ stock.ticker }}</h1>
+  <p>Company: {{ stock.company_name }}</p>
+  {% if stock.last_price %}
+    <p>Current Price: £{{ stock.last_price|floatformat:2 }}</p>
+  {% else %}
+    <p>Current Price: N/A</p>
+  {% endif %}
+  {% if error %}
+    <div class="alert alert-danger">{{ error }}</div>
+  {% endif %}
+  <form method="POST">
+    {% csrf_token %}
+    {{ form.as_p }}
+    <button type="submit" class="btn btn-success">Buy Shares</button>
+    <button type="submit" class="btn btn-danger">Sell Shares</button>
+  </form>
+</div>
+{% endblock %}
+

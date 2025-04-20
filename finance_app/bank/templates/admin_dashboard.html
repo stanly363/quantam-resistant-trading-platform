@@ -1,0 +1,166 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="container my-5">
+  <h1 class="text-center mb-4">Admin Dashboard</h1>
+  <p class="text-center">Hello, <strong>{{ user.username }}</strong>! You are logged in as <strong>Admin</strong>.</p>
+  <!-- Analytics Section -->
+  <div class="row text-center mb-4">
+    <div class="col-md-4 mb-3">
+      <div class="card bg-success text-white shadow">
+        <div class="card-body">
+          <h4 class="card-title">Total Transactions</h4>
+          <p class="card-text display-5">{{ analytics.total_transactions }}</p>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-4 mb-3">
+      <div class="card bg-info text-white shadow">
+        <div class="card-body">
+          <h4 class="card-title">Total Money Moved (£)</h4>
+          <p class="card-text display-5">£{{ analytics.total_money_moved|floatformat:2 }}</p>
+        </div>
+      </div>
+    </div>
+    <div class="col-md-4 mb-3">
+      <div class="card bg-warning text-dark shadow">
+        <div class="card-body">
+          <h4 class="card-title">Average Transaction (£)</h4>
+          <p class="card-text display-5">£{{ analytics.average_transaction|floatformat:2 }}</p>
+        </div>
+      </div>
+    </div>
+  </div>
+  <!-- User Management Section -->
+  <div class="mb-5">
+    <div class="d-flex justify-content-between align-items-center">
+      <h2>User Management</h2>
+      <a href="{% url 'admin_create_user' %}" class="btn btn-primary">Create User</a>
+    </div>
+    <p>Total Users: {{ total_users }}</p>
+    <div class="table-responsive">
+      <table class="table table-bordered table-striped">
+        <thead class="table-dark">
+          <tr>
+            <th>Username</th>
+            <th>Email</th>
+            <th>Role</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for user in users %}
+            <tr>
+              <td><a href="{% url 'admin_user_detail' user.id %}">{{ user.username }}</a></td>
+              <td>{{ user.email }}</td>
+              <td>{{ user.profile.role }}</td>
+              <td>
+                <a href="{% url 'admin_user_detail' user.id %}" class="btn btn-sm btn-info">View</a>
+                <a href="{% url 'admin_user_delete' user.id %}" class="btn btn-sm btn-danger">Delete</a>
+              </td>
+            </tr>
+          {% empty %}
+            <tr>
+              <td colspan="4">No users found.</td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  
+  <!-- Audit Logs Section -->
+  <div class="mb-5">
+    <h2>Audit Logs</h2>
+    <div class="table-responsive">
+      <table class="table table-bordered table-striped text-center">
+        <thead class="table-dark">
+          <tr>
+            <th>Timestamp</th>
+            <th>Event</th>
+            <th>User</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for log in audit_logs %}
+            <tr>
+              <td>{{ log.get_formatted_timestamp }}</td>
+              <td>{{ log.event }}</td>
+              <td>{% if log.user %}{{ log.user.username }}{% else %}N/A{% endif %}</td>
+            </tr>
+          {% empty %}
+            <tr>
+              <td colspan="3">No audit logs found.</td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+  
+  <!-- Key Management Section -->
+<div class="text-center mb-5">
+  <h2 class="mb-3">Key Management</h2>
+  <p>Algorithm: <strong>{{ server_algorithm }}</strong></p>
+
+  <!-- Key Preview Section -->
+  <p>Server Public Key (Preview):</p>
+  <p id="key-preview">{{ server_public_key|slice:":30" }}... <a href="#" onclick="toggleFullKey(event)">View Full Key</a></p>
+
+  <!-- Full Key Display Section (Hidden Initially) -->
+  <div id="full-key-container" style="display:none;">
+      <textarea id="full-key" rows="5" class="form-control" readonly>
+{{ server_public_key }}
+      </textarea>
+      <a href="#" onclick="toggleFullKey(event)">Hide Full Key</a>
+  </div>
+
+  <a href="{% url 'rotate_keys' %}" class="btn btn-warning btn-lg mt-3">Rotate Keys</a>
+</div>
+
+<script>
+  function toggleFullKey(event) {
+      event.preventDefault();
+      const fullKeyContainer = document.getElementById('full-key-container');
+      const keyPreview = document.getElementById('key-preview');
+
+      if (fullKeyContainer.style.display === 'none') {
+          fullKeyContainer.style.display = 'block';
+          keyPreview.style.display = 'none';
+      } else {
+          fullKeyContainer.style.display = 'none';
+          keyPreview.style.display = 'block';
+      }
+  }
+</script>
+
+  
+  <!-- Recent Transactions Section -->
+  <div class="mt-4">
+    <h2 class="text-center mb-3">Recent Transactions</h2>
+    <div class="table-responsive">
+      <table class="table table-bordered table-striped text-center">
+        <thead class="table-dark">
+          <tr>
+            <th>ID</th><th>Stock</th><th>Type</th><th>Shares</th><th>Price (£)</th><th>Timestamp</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for tx in recent_transactions %}
+            <tr>
+              <td>{{ tx.id }}</td>
+              <td>{{ tx.stock }}</td><td>{{ tx.transaction_type }}</td><td>{{ tx.shares|floatformat:2 }}</td>
+              <td>£{{ tx.price|floatformat:2 }}</td><td>{{ tx.timestamp }}</td>
+            </tr>
+          {% empty %}
+            <tr>
+              <td colspan="6">No recent transactions found.</td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+      </div>
+    </div>
+  
+</div>
+{% endblock %}

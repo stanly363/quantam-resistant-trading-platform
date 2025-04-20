@@ -1,0 +1,235 @@
+{% extends "base.html" %}
+{% block content %}
+<!-- Custom CSS for consistent and non-shrinking chart grids -->
+<style>
+  .grid-card {
+    padding: 15px;
+    margin-bottom: 20px;
+    overflow: hidden;
+    /* Prevent the card from shrinking */
+    flex-shrink: 0;
+  }
+  /* Chart container ensures the canvas fills the card */
+  .chart-container {
+    position: relative;
+    width: 100%;
+    height: 100%;
+  }
+  /* Fixed sizes for our chart cards */
+  .pie-chart-card {
+    width: 400px;
+    height: 400px;
+  }
+  .line-chart-card {
+    width: 600px;
+    height: 500px;
+  }
+</style>
+
+<div class="container my-5">
+  <h1 class="text-center mb-4">Advisor Dashboard</h1>
+  
+  <!-- Client Portfolios Section -->
+  <div class="mb-5">
+    <h2>Client Portfolios</h2>
+    {% if clients %}
+    <table class="table table-striped">
+      <thead class="table-dark">
+        <tr>
+          <th>Client Username</th>
+          <th>Portfolio Value (£)</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for client in clients %}
+        <tr>
+          <td>
+            <a href="{% url 'advisor_client_detail' client.user.id %}">
+              {{ client.user.username }}
+            </a>
+          </td>
+          <td>£{{ client.portfolio_value|floatformat:2 }}</td>
+        </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+    {% else %}
+      <p>No client portfolios found.</p>
+    {% endif %}
+  </div>
+  
+  
+  <div class="row">
+    <!-- Combined Buy/Sell Transaction Form -->
+    <div class="col-md-6 d-flex justify-content-center">
+      <div class="border rounded grid-card" style="width: 100%;">
+        <h2 class="text-center">Buy/Sell Stocks for Client</h2>
+        <form method="post" action="{% url 'advisor_transaction' %}">
+          {% csrf_token %}
+          <div class="mb-3">
+            <label for="client" class="form-label">Select Client</label>
+            <select name="client" id="client" class="form-select" required>
+              <option value="">-- Select Client --</option>
+              {% for client in clients %}
+                <option value="{{ client.user.id }}">{{ client.user.username }}</option>
+              {% endfor %}
+            </select>
+          </div>
+          <div class="mb-3">
+            <label for="ticker" class="form-label">Stock Ticker</label>
+            <select name="ticker" id="ticker" class="form-select" required>
+              <option value="">-- Select Stock --</option>
+              {% for stock in stocks %}
+                <option value="{{ stock.ticker }}">{{ stock.ticker }} - {{ stock.company_name }}</option>
+              {% endfor %}
+            </select>
+          </div>
+          <div class="mb-3">
+            <label for="shares" class="form-label">Number of Shares</label>
+            <input type="number" name="shares" id="shares" class="form-control" step="0.01" placeholder="Enter number of shares" required>
+          </div>
+          <div class="d-flex justify-content-between">
+            <button type="submit" name="action" value="buy" class="btn btn-primary">Submit Purchase</button>
+            <button type="submit" name="action" value="sell" class="btn btn-danger">Submit Sale</button>
+          </div>
+        </form>
+      </div>
+    </div>
+    
+    <!-- Investment Recommendation Form -->
+    <div class="col-md-6 d-flex justify-content-center">
+      <div class="border rounded grid-card" style="width: 100%;">
+        <h2 class="text-center">Send Investment Recommendation</h2>
+        <form method="post" action="{% url 'advisor_message' %}">
+          {% csrf_token %}
+          <div class="mb-3">
+            <label for="recipient_msg" class="form-label">Select Client</label>
+            <select name="recipient" id="recipient_msg" class="form-select" required>
+              <option value="">-- Select Client --</option>
+              {% for client in clients %}
+                <option value="{{ client.user.username }}">{{ client.user.username }}</option>
+              {% endfor %}
+            </select>
+          </div>
+          <div class="mb-3">
+            <label for="message" class="form-label">Message</label>
+            <textarea name="message" id="message" rows="5" class="form-control" placeholder="Enter your recommendation" required></textarea>
+          </div>
+          <div class="text-center">
+            <button type="submit" class="btn btn-secondary">Send Recommendation</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+
+<!-- Charts Section: Two Charts Side-by-Side -->
+<div class="row mt-5">
+  <!-- Pie Chart: Portfolio Distribution -->
+  <div class="col-md-6 text-center">
+    <h2 class="mb-3">Client Portfolio Distribution</h2>
+    <div style="display: flex; justify-content: center;">
+      <canvas id="portfolioPieChart" style="width:300px; height:300px;"></canvas>
+    </div>
+  </div>
+  <!-- Line Chart: Portfolio Value History -->
+  <div class="col-md-6 text-center">
+    <h2 class="mb-3">Client Portfolio Value History</h2>
+    <div style="display: flex; justify-content: center;">
+      <canvas id="portfolioLineChart" style="width:300px; height:300px;"></canvas>
+    </div>
+    <div id="portfolioChange" class="mt-2"></div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+  // ----- PIE CHART: Portfolio Distribution -----
+  var pieData = JSON.parse('{{ chart_data|escapejs }}');
+  var pieCtx = document.getElementById('portfolioPieChart').getContext('2d');
+  var pieLabels = pieData.map(item => item.label);
+  var pieValues = pieData.map(item => item.value);
+  var pieColors = [
+    'rgba(255, 99, 132, 0.7)',
+    'rgba(54, 162, 235, 0.7)',
+    'rgba(255, 206, 86, 0.7)',
+    'rgba(75, 192, 192, 0.7)',
+    'rgba(153, 102, 255, 0.7)',
+    'rgba(255, 159, 64, 0.7)',
+    'rgba(199, 199, 199, 0.7)',
+    'rgba(83, 102, 255, 0.7)',
+    'rgba(255, 99, 71, 0.7)',
+    'rgba(60, 179, 113, 0.7)'
+  ];
+  var portfolioPieChart = new Chart(pieCtx, {
+      type: 'pie',
+      data: {
+          labels: pieLabels,
+          datasets: [{
+              data: pieValues,
+              backgroundColor: pieColors.slice(0, pieLabels.length),
+              borderColor: 'rgba(255, 255, 255, 1)',
+              borderWidth: 1
+          }]
+      },
+      options: {
+          responsive: false,
+          maintainAspectRatio: false,
+          plugins: {
+              legend: {
+                  position: 'bottom'
+              }
+          }
+      }
+  });
+
+  // ----- LINE CHART: Portfolio Value History -----
+  var lineCtx = document.getElementById('portfolioLineChart').getContext('2d');
+  var portfolioLineChart;
+  function fetchPortfolioHistory() {
+    fetch("{% url 'portfolio_history' %}")
+      .then(response => response.json())
+      .then(data => {
+          var labels = data.history.map(item => item.timestamp);
+          var values = data.history.map(item => item.total_value);
+          var startingValue = data.starting_value;
+          var currentValue = data.current_value;
+          var percentageChange = startingValue > 0 ? ((currentValue - startingValue) / startingValue) * 100 : 0;
+          document.getElementById('portfolioChange').innerText = "Change since start of day: " + percentageChange.toFixed(2) + "%";
+          if (portfolioLineChart) {
+              portfolioLineChart.data.labels = labels;
+              portfolioLineChart.data.datasets[0].data = values;
+              portfolioLineChart.update();
+          } else {
+              portfolioLineChart = new Chart(lineCtx, {
+                  type: 'line',
+                  data: {
+                      labels: labels,
+                      datasets: [{
+                          label: 'Portfolio Value (£)',
+                          data: values,
+                          backgroundColor: 'rgba(75, 192, 192, 0.4)',
+                          borderColor: 'rgba(75, 192, 192, 1)',
+                          fill: true,
+                          tension: 0.1
+                      }]
+                  },
+                  options: {
+                      responsive: false,
+                      maintainAspectRatio: false,
+                      scales: {
+                          y: {
+                              beginAtZero: false
+                          }
+                      }
+                  }
+              });
+          }
+      })
+      .catch(error => console.error("Error fetching portfolio history:", error));
+  }
+  fetchPortfolioHistory();
+  setInterval(fetchPortfolioHistory, 60000);
+</script>
+
+{% endblock %}

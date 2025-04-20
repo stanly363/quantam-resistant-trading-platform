@@ -1,0 +1,97 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="container my-5">
+  <div class="row justify-content-center">
+    {% if user.profile.role == 'admin' %}
+      <div class="col-md-10">
+        <h1 class="display-4 fw-bold text-primary text-center mb-4">Admin Dashboard</h1>
+        <p class="fs-4 text-center">
+          Hello, <strong>{{ user.username }}</strong>! You are logged in as <strong>Admin</strong>.
+        </p>
+
+        <!-- Analytics Section -->
+        <div class="row text-center mb-4">
+          <div class="col-md-4 mb-3">
+            <div class="card bg-success text-white shadow">
+              <div class="card-body">
+                <h4 class="card-title">Total Transactions</h4>
+                <p class="card-text display-5">{{ analytics.total_transactions }}</p>
+              </div>
+            </div>
+          </div>
+          <div class="col-md-4 mb-3">
+            <div class="card bg-info text-white shadow">
+              <div class="card-body">
+                <h4 class="card-title">Total Money Moved (£)</h4>
+                <p class="card-text display-5">£{{ analytics.total_money_moved|floatformat:2 }}</p>
+              </div>
+            </div>
+          </div>
+          <div class="col-md-4 mb-3">
+            <div class="card bg-warning text-dark shadow">
+              <div class="card-body">
+                <h4 class="card-title">Average Transaction (£)</h4>
+                <p class="card-text display-5">£{{ analytics.average_transaction|floatformat:2 }}</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Recent Transactions Section -->
+        <div class="mt-4">
+          <h2 class="text-center mb-3">Recent Transactions</h2>
+          <div class="table-responsive">
+            <table class="table table-bordered table-striped text-center">
+              <thead class="table-dark">
+                <tr>
+                  <th>ID</th>
+                  <th>Sender</th>
+                  <th>Recipient</th>
+                  <th>Amount (£)</th>
+                  <th>Timestamp</th>
+                  <th>Status</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for tx in recent_transactions %}
+                  <tr>
+                    <td>{{ tx.id }}</td>
+                    <td>{{ tx.sender }}</td>
+                    <td>{{ tx.recipient }}</td>
+                    <td>£{{ tx.amount_value|floatformat:2 }}</td>
+                    <td>{{ tx.get_formatted_timestamp }}</td>
+                    <td>✔️ Success</td>
+                  </tr>
+                {% empty %}
+                  <tr>
+                    <td colspan="6">No recent transactions found.</td>
+                  </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    {% else %}
+      <div class="col-md-8 text-center">
+        <h1 class="display-4 fw-bold text-primary">Dashboard</h1>
+        <p class="fs-4">
+          Hello, <strong>{{ user.username }}</strong>! You are logged in as <strong>{{ user.profile.role }}</strong>.
+        </p>
+
+        <div class="card bg-success text-white shadow-lg mx-auto my-4" style="max-width: 400px;">
+          <div class="card-body">
+            <h3 class="card-title mb-3">Current Balance</h3>
+            <p class="display-3 fw-bold">£{{ user.profile.balance|floatformat:2 }}</p>
+          </div>
+        </div>
+
+        <div class="mt-4">
+          <a href="{% url 'transaction' %}" class="btn btn-primary btn-lg me-3">Make a Transaction</a>
+          <a href="{% url 'my_transactions' %}" class="btn btn-info btn-lg">My Transactions</a>
+        </div>
+      </div>
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

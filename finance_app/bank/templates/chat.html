@@ -1,0 +1,38 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="chat-container" style="max-width:600px; margin:20px auto; padding:20px; border:1px solid #ccc; border-radius:5px;">
+  <h2 style="text-align:center;">Encrypted Chat</h2>
+
+  <!-- Chat messages display area -->
+  <div id="chat-messages" style="height:300px; overflow-y:auto; border:1px solid #ddd; padding:10px; margin-bottom:20px; background:#f9f9f9;">
+    {% if chat_messages %}
+      {% for msg in chat_messages %}
+        <div class="message" style="margin-bottom:10px; padding:5px; border-bottom:1px solid #eee;">
+          <strong>{{ msg.sender.username }} to {{ msg.recipient.username }}:</strong>
+          <p style="margin:5px 0;">{{ msg.decrypted_text }}</p>
+          <small>{{ msg.get_formatted_timestamp }}</small>
+        </div>
+      {% endfor %}
+    {% else %}
+      <p>No messages yet.</p>
+    {% endif %}
+  </div>
+
+  <!-- Chat message submission form -->
+  <form method="post" action="{% url 'message' %}">
+    {% csrf_token %}
+    <div style="margin-bottom:10px;">
+      <input type="text" name="recipient" placeholder="Recipient Username" required
+             style="width:100%; padding:8px; border:1px solid #ccc; border-radius:4px;">
+    </div>
+    <div style="margin-bottom:10px;">
+      <textarea name="message" placeholder="Type your message..." rows="3" required
+                style="width:100%; padding:8px; border:1px solid #ccc; border-radius:4px;"></textarea>
+    </div>
+    <div style="text-align:right;">
+      <button type="submit" style="padding:8px 16px; background:#007bff; color:#fff; border:none; border-radius:4px;">Send</button>
+    </div>
+  </form>
+</div>
+{% endblock %}

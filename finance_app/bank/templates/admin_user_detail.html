@@ -1,0 +1,112 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="container-fluid my-3" style="max-width: 1200px;">
+  <h1>User Details for {{ user_obj.username }}</h1>
+  <p>Email: {{ user_obj.email }}</p>
+  <div class="row mt-3">
+    <div class="col-md-6">
+      <h2>Portfolio Distribution</h2>
+      <p>Total Portfolio Value: £{{ total_portfolio_value|floatformat:2 }}</p>
+      <table class="table table-striped">
+        <thead>
+          <tr><th>Asset</th><th>Value (£)</th><th>Percentage (%)</th></tr>
+        </thead>
+        <tbody>
+          <tr><td>Cash</td><td>£{{ cash|floatformat:2 }}</td><td>{{ cash_percentage|floatformat:2 }}%</td></tr>
+          {% for item in holding_data %}
+          <tr><td>{{ item.holding.stock.ticker }}</td><td>£{{ item.value|floatformat:2 }}</td>
+            <td>{{ item.percentage|floatformat:2 }}%</td></tr>
+          {% empty %}
+          <tr><td colspan="3">No holdings found.</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+    <div class="col-md-6 d-flex align-items-center justify-content-center">
+      <canvas id="userPortfolioPieChart" style="width:300px; height:300px;"></canvas>
+    </div>
+  </div>
+  <div class="row mt-3">
+    <div class="col-md-6">
+      {% if profile_role == "client" %}
+        <h3>Advisor Information</h3>
+        {% if advisor %}<p>Assigned Advisor: {{ advisor.username }}</p>{% else %}<p>No advisor assigned.</p>{% endif %}
+      {% elif profile_role == "advisor" %}
+        <h3>Assigned Clients</h3>
+        {% if clients_assigned %}
+          <ul class="list-group">{% for client in clients_assigned %}<li class="list-group-item">
+            {{ client.user.username }}</li>{% endfor %}</ul>
+        {% else %}<p>No clients assigned.</p>{% endif %}
+      {% endif %}
+    </div>
+  </div>
+  <div class="row mt-3">
+    <div class="col">
+      {% if user.profile.role == 'admin' %}
+        <a href="{% url 'admin_dashboard' %}" class="btn btn-secondary">Back to Dashboard</a>
+      {% elif user.profile.role == 'advisor' %}
+        <a href="{% url 'advisor' %}" class="btn btn-secondary">Back to Dashboard</a>
+      {% else %}
+        <a href="{% url 'portfolio' %}" class="btn btn-secondary">Back to Dashboard</a>
+      {% endif %}
+    </div>
+  </div>
+</div>
+
+
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+  // Parse the chart data from the view
+  var chartData = JSON.parse('{{ chart_data|escapejs }}');
+  var ctx = document.getElementById('userPortfolioPieChart').getContext('2d');
+  var labels = chartData.map(item => item.label);
+  var values = chartData.map(item => item.value);
+  var backgroundColors = [
+    'rgba(255, 99, 132, 0.7)',
+    'rgba(54, 162, 235, 0.7)',
+    'rgba(255, 206, 86, 0.7)',
+    'rgba(75, 192, 192, 0.7)',
+    'rgba(153, 102, 255, 0.7)',
+    'rgba(255, 159, 64, 0.7)',
+    'rgba(199, 199, 199, 0.7)',
+    'rgba(83, 102, 255, 0.7)',
+    'rgba(255, 99, 71, 0.7)',
+    'rgba(60, 179, 113, 0.7)'
+  ];
+  
+  var pieChart = new Chart(ctx, {
+    type: 'pie',
+    data: {
+      labels: labels,
+      datasets: [{
+        data: values,
+        backgroundColor: backgroundColors.slice(0, labels.length),
+        borderColor: 'rgba(255, 255, 255, 1)',
+        borderWidth: 1
+      }]
+    },
+    options: {
+      responsive: false,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: {
+          position: 'bottom'
+        },
+        tooltip: {
+          callbacks: {
+            label: function(context) {
+              let label = context.label || '';
+              if (label) {
+                label += ': ';
+              }
+              label += '£' + Number(context.parsed).toFixed(2);
+              return label;
+            }
+          }
+        }
+      }
+    }
+  });
+</script>
+{% endblock %}

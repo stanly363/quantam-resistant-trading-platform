@@ -1,0 +1,40 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="container">
+  <h1 class="text-center display-4 fw-bold text-primary mb-4">My Transactions</h1>
+
+  {% if transactions|length == 0 %}
+    <div class="alert alert-warning text-center">No transactions found for you.</div>
+  {% else %}
+    <table class="table table-bordered table-striped text-center">
+      <thead class="table-dark">
+        <tr>
+          <th>ID</th>
+          <th>Sender</th>
+          <th>Recipient</th>
+          <th>Amount (£)</th>
+          <th>Timestamp</th>
+          <th>Status</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for tx in transactions %}
+          <tr>
+            <td>{{ tx.id }}</td>
+            {% if tx.error %}
+              <td colspan="4" class="text-danger">Error</td>
+              <td>{{ tx.error }}</td>
+            {% else %}
+              <td>{{ tx.sender }}</td>
+              <td>{{ tx.recipient }}</td>
+              <td>£{{ tx.amount_value|floatformat:2 }}</td>
+              <td>{{ tx.timestamp }}</td>
+              <td>✔️ Success</td>
+            {% endif %}
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  {% endif %}
+</div>
+{% endblock %}

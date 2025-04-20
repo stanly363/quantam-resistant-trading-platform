@@ -1,0 +1,71 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="container my-5">
+  <h1 class="text-center">Your Investment Portfolio</h1>
+  <p class="text-center">Cash Balance: £{{ cash_balance|floatformat:2 }}</p>
+  <h2>Your Holdings</h2>
+  <table class="table table-striped">
+    <thead><tr><th>Asset</th><th>Value</th><th>Percentage (%)</th></tr></thead>
+    <tbody>
+      <tr><td>Cash</td><td>£{{ cash_balance|floatformat:2 }}</td>
+        <td>{{ cash_percentage|floatformat:2 }}%</td></tr>
+      {% for item in holding_data %}
+      <tr><td>{{ item.holding.stock.ticker }}</td><td>£{{ item.value|floatformat:2 }}</td>
+        <td>{{ item.percentage|floatformat:2 }}%</td></tr>
+      {% empty %}
+      <tr><td colspan="3">No holdings found.</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  <div class="row mt-5">
+    <div class="col-md-4 d-flex align-items-center justify-content-center">
+      <div>
+        <h2 class="mb-3 text-center">Portfolio Distribution</h2>
+        <div style="display: flex; justify-content: center;">
+          <canvas id="portfolioPieChart" style="width:300px; height:300px;"></canvas></div>
+      </div>
+    </div>
+    <div class="col-md-4 d-flex align-items-center justify-content-center">
+      <div>
+        <h2 class="mb-3 text-center">Portfolio Value History</h2>
+        <div style="display: flex; justify-content: center;">
+          <canvas id="portfolioLineChart" style="width:300px; height:300px;"></canvas></div>
+        <div id="portfolioChange" class="mt-2 text-center"></div>
+      </div>
+    </div>
+    <div class="col-md-4 d-flex align-items-center justify-content-center">
+      <div style="width:300px;">
+        <h2 class="mb-3 text-center">Trade Stocks</h2>
+        <form method="post" action="{% url 'client_transaction' %}">
+          {% csrf_token %}
+          <div class="mb-3">
+            <label for="ticker" class="form-label">Stock Ticker</label>
+            <select name="ticker" id="ticker" class="form-select" required>
+              <option value="">-- Select Stock --</option>
+              {% for stock in stocks %}<option value="{{ stock.ticker }}">
+                {{ stock.ticker }} - {{ stock.company_name }}</option>{% endfor %}
+            </select>
+          </div>
+          <div class="mb-3">
+            <label for="shares" class="form-label">Number of Shares</label>
+            <input type="number" name="shares" id="shares" class="form-control" step="0.01"
+             placeholder="Enter number of shares" required>
+          </div>
+          <div class="d-flex justify-content-between">
+            <button type="submit" name="action" value="buy" class="btn btn-primary">Buy</button>
+            <button type="submit" name="action" value="sell" class="btn btn-danger">Sell</button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+var pieData = JSON.parse('{{ chart_data|escapejs }}'), pieCtx = document.getElementById('portfolioPieChart').getContext('2d'), pieLabels = pieData.map(item => item.label), pieValues = pieData.map(item => item.value), pieColors = ['rgba(255, 99, 132, 0.7)','rgba(54, 162, 235, 0.7)','rgba(255, 206, 86, 0.7)','rgba(75, 192, 192, 0.7)','rgba(153, 102, 255, 0.7)','rgba(255, 159, 64, 0.7)','rgba(199, 199, 199, 0.7)','rgba(83, 102, 255, 0.7)','rgba(255, 99, 71, 0.7)','rgba(60, 179, 113, 0.7)'];
+var portfolioPieChart = new Chart(pieCtx, {type:'pie', data:{labels: pieLabels, datasets:[{data: pieValues, backgroundColor: pieColors.slice(0, pieLabels.length), borderColor: 'rgba(255,255,255,1)', borderWidth: 1}]}, options:{responsive: false, maintainAspectRatio: false, plugins:{legend:{position:'bottom'}}}});
+var lineCtx = document.getElementById('portfolioLineChart').getContext('2d'), portfolioLineChart;
+function fetchPortfolioHistory(){fetch("{% url 'portfolio_history' %}").then(response => response.json()).then(data => {var labels = data.history.map(item => item.timestamp), values = data.history.map(item => item.total_value), startingValue = data.starting_value, currentValue = data.current_value, percentageChange = startingValue > 0 ? ((currentValue - startingValue)/startingValue)*100 : 0; document.getElementById('portfolioChange').innerText = "Change since start of day: " + percentageChange.toFixed(2) + "%"; if(portfolioLineChart){portfolioLineChart.data.labels = labels; portfolioLineChart.data.datasets[0].data = values; portfolioLineChart.update();} else {portfolioLineChart = new Chart(lineCtx, {type:'line', data:{labels: labels, datasets:[{label:'Portfolio Value (£)', data: values, backgroundColor: 'rgba(75,192,192,0.4)', borderColor: 'rgba(75,192,192,1)', fill: true, tension: 0.1}]}, options:{responsive: false, maintainAspectRatio: false, scales:{y:{beginAtZero:false}}}});}}).catch(error => console.error("Error fetching portfolio history:", error));}
+fetchPortfolioHistory(); setInterval(fetchPortfolioHistory, 60000);
+</script>
+{% endblock %}

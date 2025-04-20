@@ -1,0 +1,42 @@
+{% extends "base.html" %}
+{% load widget_tweaks %}
+{% block content %}
+<div class="container d-flex justify-content-center align-items-center" style="min-height: 80vh;">
+  <div class="card" style="width: 100%; max-width: 500px;">
+    <div class="card-body">
+      <h3 class="card-title mb-3 text-center">Register</h3>
+      <form method="POST">
+        {% csrf_token %}
+        <div class="mb-3">
+          {{ form.username.label_tag }}
+          {{ form.username|add_class:"form-control" }}
+        </div>
+        <div class="mb-3">
+          {{ form.email.label_tag }}
+          {{ form.email|add_class:"form-control" }}
+        </div>
+        <div class="mb-3">
+          {{ form.password1.label_tag }}
+          {{ form.password1|add_class:"form-control" }}
+        </div>
+        <div class="mb-3">
+          {{ form.password2.label_tag }}
+          {{ form.password2|add_class:"form-control" }}
+        </div>
+        <div class="row mb-3">
+          <div class="col-md-6">
+            {{ form.role.label_tag }}
+            {{ form.role|add_class:"form-select" }}
+          </div>
+          <div class="col-md-6">
+            {{ form.advisor.label_tag }}
+            {{ form.advisor|add_class:"form-select" }}
+          </div>
+        </div>
+        <button type="submit" class="btn btn-primary w-100">Register</button>
+      </form>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
