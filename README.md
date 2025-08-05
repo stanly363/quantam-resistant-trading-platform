@@ -25,18 +25,18 @@ This is a secure Django-based application for managing investment portfolios, de
    ```bash
    pip install -r requirements.txt
 
-2. **Run test scripts**
+3. **Configure Environment Variables**
+   Edit the .env file to include your hosted database details and also your smtp server for password reset functionality.
+   
+4. **Run test scripts**
    ```bash
    python manage.py test --keepdb
    
-3. **Load Webpage**
+5. **Load Webpage**
    ```bash
    python runsslserver.py
 
    Visit https://127.0.0.1:8000 
 
-4. **Login to the Users**
-   USERNAME:PASSWORD
-   admin:Secure_P@$$word123
-   advisor:Secure_P@$$word123
-   user:Secure_P@$$word123
+4. **Create Users and Login**
+   Create user accounts and test the functionality manually.
