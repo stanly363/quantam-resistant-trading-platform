@@ -39,4 +39,5 @@ This is a secure Django-based application for managing investment portfolios, de
    Visit https://127.0.0.1:8000 
 
 4. **Create Users and Login**
+   
    Create user accounts and test the functionality manually.
