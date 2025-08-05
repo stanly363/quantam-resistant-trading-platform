@@ -26,13 +26,14 @@ This is a secure Django-based application for managing investment portfolios, de
    pip install -r requirements.txt
 
 3. **Configure Environment Variables**
+   
    Edit the .env file to include your hosted database details and also your smtp server for password reset functionality.
    
-4. **Run test scripts**
+5. **Run test scripts**
    ```bash
    python manage.py test --keepdb
    
-5. **Load Webpage**
+6. **Load Webpage**
    ```bash
    python runsslserver.py
 
