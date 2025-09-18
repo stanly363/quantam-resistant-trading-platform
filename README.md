@@ -31,7 +31,7 @@ This project's primary goal is to demonstrate robust security in a financial app
 
 * **Security**: `django-sslserver`, `python-quantcrypt`
 
-* **Frontend**: HTML, CSS, JavaScript (with a charting library like Chart.js)
+* **Frontend**: HTML, CSS, JavaScript (with a charting library (Chart.js))
 
 ## Requirements
 
@@ -76,12 +76,8 @@ pip install -r requirements.txt
 
 ### 4. Configure Environment Variables
 
-Create a `.env` file in the project root. You can copy the provided `.env.example` file to get started.
+Edit the `.env` file to use your database backend and configure the other secrets.
 
-```
-cp .env.example .env
-
-```
 
 Now, **edit the `.env` file** to include your database connection details, a Django `SECRET_KEY`, and your SMTP server details for password reset emails.
 
