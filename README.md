@@ -1,4 +1,3 @@
-'''
 # MyFinance Inc. - Post-Quantum Secure Portfolio Manager 📈
 
 MyFinance Inc. is a full-stack, secure web application built with **Django** for managing investment portfolios. It is designed with a security-first approach, featuring an implementation of **post-quantum cryptography** to ensure long-term data protection against emerging threats.
